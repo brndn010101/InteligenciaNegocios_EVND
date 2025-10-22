@@ -291,3 +291,280 @@ EXEC InsertarVentaConDetalle
 | `REVERSE(cadena)`                     | Invierte el texto                                | `REVERSE('SQL') → 'LQS'`                           |
 | `CONCAT(val1, val2, ...)`             | Une varios valores en una sola cadena            | `CONCAT('Cliente ', Nombre)`                       |
 | `CONCAT_WS(sep, val1, val2, ...)`     | Une valores con un separador                     | `CONCAT_WS('-', 'MX', '001') → 'MX-001'`           |
+
+```sql
+SELECT *
+FROM clientes
+
+SELECT 
+	UPPER(Nombre) AS Mayusculas,
+	LOWER(Nombre) AS Minusculas,
+	LEN(Nombre) AS Longitud,
+	SUBSTRING(Nombre, 1, 3)
+FROM clientes
+
+INSERT INTO clientes (IdCliente, Nombre, Edad, Ciudad)
+VALUES (8, 'Luis Lopez', 45, 'Achichilco')
+
+INSERT INTO clientes (IdCliente, Nombre, Edad, Ciudad)
+VALUES (9, ' German Galindo', 32, 'Achichilco2  ')
+
+INSERT INTO clientes (IdCliente, Nombre, Edad, Ciudad)
+VALUES (10, ' Jaen Porfirio ', 19, 'Achichilco3  ')
+
+
+SELECT
+	Nombre AS [Nombre Fuente],
+	LTRIM(UPPER(Nombre)) AS Mayusculas,
+	LOWER(Nombre) AS Minusculas,
+	LEN(Nombre) AS Longitud,
+	SUBSTRING(Nombre, 1, 3),
+	LTRIM (Nombre) AS [Sin Espacios Izquierda],
+	RTRIM (Nombre) AS [Sin Espacios Derecha],
+	CONCAT (Nombre, ' - ', Edad) AS [Nombe Edad],
+	UPPER(REPLACE(TRIM(Ciudad), 'Chapulhuacan', 'Chapu')) AS [Ciudad Nombre]
+FROM clientes
+
+INSERT INTO clientes (IdCliente, Nombre, Edad, Ciudad)
+VALUES (11, ' Roberto Estrada  ', 19, 'Chapulhuacan  ')
+
+
+-- Crear una tabla a partir de una consulta
+SELECT TOP 0
+	IdCliente,
+	Nombre AS [Nombre Fuente],
+	LTRIM(UPPER(Nombre)) AS Mayusculas,
+	LOWER(Nombre) AS Minusculas,
+	LEN(Nombre) AS Longitud,
+	SUBSTRING(Nombre, 1, 3) AS [Primeros 3],
+	LTRIM (Nombre) AS [Sin Espacios Izquierda],
+	RTRIM (Nombre) AS [Sin Espacios Derecha],
+	CONCAT (Nombre, ' - ', Edad) AS [Nombe Edad],
+	UPPER(REPLACE(TRIM(Ciudad), 'Chapulhuacan', 'Chapu')) AS [Ciudad Nombre]
+INTO stage_clientes
+FROM clientes
+
+--Agrega un constraint a la tabla (primary key)
+ALTER TABLE stage_clientes
+ADD CONSTRAINT pk_stage_clientes
+PRIMARY KEY (idCliente)
+
+INSERT INTO stage_clientes(
+	IdCliente,
+	[Nombre Fuente],
+	Mayusculas,
+	Minusculas,
+	Longitud,
+	[Primeros 3],
+	[Sin Espacios Izquierda],
+	[Sin Espacios Derecha],
+	[Nombe Edad],
+	[Ciudad Nombre]
+)
+SELECT
+	IdCliente,
+	Nombre AS [Nombre Fuente],
+	LTRIM(UPPER(Nombre)) AS Mayusculas,
+	LOWER(Nombre) AS Minusculas,
+	LEN(Nombre) AS Longitud,
+	SUBSTRING(Nombre, 1, 3) AS [Primeros 3],
+	LTRIM (Nombre) AS [Sin Espacios Izquierda],
+	RTRIM (Nombre) AS [Sin Espacios Derecha],
+	CONCAT (Nombre, ' - ', Edad) AS [Nombe Edad],
+	UPPER(REPLACE(TRIM(Ciudad), 'Chapulhuacan', 'Chapu')) AS [Ciudad Nombre]
+FROM clientes
+```
+
+## Funciones de Fecha
+
+| Función                               | Descripción                        |
+| ------------------------------------- | ---------------------------------- |
+| `GETDATE()`                           | Devuelve la fecha y hora actual    |
+| `DATEADD(intervalo, cantidad, fecha)` | Suma o resta unidades de tiempo    |
+| `DATEDIFF(intervalo, fecha1, fecha2)` | Calcula la diferencia entre fechas |
+
+```sql
+USE NORTHWIND
+
+SELECT OrderDate,  
+GETDATE() AS [Fecha Actual],  
+DATEADD(DAY, 10, OrderDate) AS [FechaMas10Dias],  
+DATEPART(QUARTER, OrderDate) AS [Trimestre],  
+DATEPART(MONTH, OrderDate) AS [MesConNumero],  
+DATENAME(MONTH, OrderDate) AS [MesConNombre],  
+DATENAME(WEEKDAY, OrderDate) AS [NombreDia],  
+DATEDIFF(DAY, OrderDate, GETDATE()) AS [DiasTranscurridos],  
+DATEDIFF(YEAR, OrderDate, GETDATE()) AS [AnosTranscurridos],  
+DATEDIFF(YEAR, '2003-07-13', GETDATE()) AS [EdadYael],  
+DATEDIFF(YEAR, '1979-07-13', GETDATE()) AS [EdadProfe]  
+FROM Orders
+```
+
+## Manejo de Valores Nulos
+
+| Función                                 | Descripción                                 | Ejemplo                                                     |
+| --------------------------------------- | ------------------------------------------- | ----------------------------------------------------------- |
+| `ISNULL(expresión, valor)`              | Reemplaza `NULL` por un valor definido.     | `SELECT ISNULL(phone, 'Sin teléfono');`                     |
+| `COALESCE(expresión1, expresión2, ...)` | Devuelve el primer valor no nulo.           | `SELECT COALESCE(email, secondary_email, 'No disponible');` |
+| `NULLIF(expresión1, expresión2)`        | Devuelve `NULL` si los valores son iguales. | `SELECT NULLIF(salary, 0);`                                 |
+
+```sql
+USE miniBD
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    FirstName NVARCHAR(50),
+    LastName NVARCHAR(50),
+    Email NVARCHAR(100),
+    SecondaryEmail NVARCHAR(100),
+    Phone NVARCHAR(20),
+    Salary DECIMAL(10,2),
+    Bonus DECIMAL(10,2)
+);
+
+
+INSERT INTO Employees(
+	EmployeeID,
+	FirstName,
+	LastName,
+	Email,
+	SecondaryEmail,
+	Phone,
+	Salary,
+	Bonus
+)
+VALUES(1, 'Ana', 'Lopez', 'ana.lopez@empresa.com',NULL,'555-2345', 12000, 100),
+      (2, 'Carlos', 'Ramirez', NULL, 'c.ramirez@empresa.com', NULL, 9500, NULL),
+      (3, 'Laura', 'Gomez', NULL, NULL, '555-8900', 0, 500),
+      (4, 'Jorge', 'Diaz', 'jorge.diaz@empresa.com', NULL, NULL, 15000, 0);
+
+--Ejercicio 1
+--Mostrar el nombre completo del empleado junto con su número de teléfono
+--Si no tiene teléfono, mostrar el texto 'No Disponible'
+SELECT CONCAT(FirstName, ' ', LastName) AS [FullName],
+	ISNULL(Phone, 'No Disponible') AS [Phone]
+FROM Employees
+
+--Ejercicio 2
+--Mostrar el nombre del empleado y su correo de contacto
+SELECT CONCAT(FirstName, ' ', LastName) AS [Nombre Completo],
+	Email,
+	SecondaryEmail,
+	COALESCE (Email, SecondaryEmail, 'Sin Correo') AS [Correo Contacto]
+FROM Employees
+
+--Ejercicio 3. NULLIF
+--Mostrar el nombre del empleado, su salario y el resultado de NULLIF (Salary, 0)
+--para detectar quién tiene salario 0
+
+SELECT CONCAT(FirstName, ' ', LastName) AS [NombreCompleto],
+Salary,
+NULLIF (Salary, 0) AS [SalarioEvaluable]
+FROM Employees
+
+--Evita error de división por cero
+
+SELECT FirstName, Bonus, (Bonus / NULLIF(Salary, 0)) AS [BonusSalario]
+FROM Employees
+```
+
+## Expresiones Condicionales
+
+Permite crear condiciones dentro una consulta
+
+Sitaxis:
+
+```sql
+CASE
+	WHEN condicion1 THEN resultado1
+	WHEN condicion2 THEN resultado2
+	ELSE resultado_por_defect
+END
+```
+
+```sql
+SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS [FullName],
+	ROUND(Salary, 2) AS [Salario],
+	CASE
+		WHEN ROUND(Salary, 2) >= 10000 THEN 'Alto'
+		WHEN ROUND(Salary, 2) BETWEEN 5000 AND 9999 THEN 'Medio'
+	ELSE 'Bajo'
+	END AS [NivelSalarial]
+FROM Employees
+
+-- Combinar Funciones y CASE
+-- Seleccionar el nombre del producto, la fecha de la orden, telefono, el nombre del
+-- cliente en mayusculas, validar si el teléfono es null, poner la palabra
+-- 'No Disponible'. Comprobar la fecha de la orden restando los dias de a fecha de orden
+-- con respecto a la fecha de hoy, si estos dias son menores a 30, entonces mostrar la palabra
+-- 'Reciente', y si no 'Antiguo', el campo debe llamarse 'Estado de Pedido', utiliza la BA Northwind
+
+USE NORTHWND
+
+SELECT 
+    p.ProductName AS 'NombreProducto',
+    o.OrderDate AS 'FechaOrden',
+    CASE 
+        WHEN c.Phone IS NULL OR c.Phone = '' THEN 'No Disponible'
+        ELSE c.Phone
+    END AS 'Telefono',
+    UPPER(c.CompanyName) AS 'NombreCliente',
+    CASE 
+        WHEN DATEDIFF(DAY, o.OrderDate, GETDATE()) < 30 THEN 'Reciente'
+        ELSE 'Antiguo'
+    END AS 'Estado de Pedido'
+FROM 
+    Orders o
+    INNER JOIN Customers c ON o.CustomerID = c.CustomerID
+    INNER JOIN [Order Details] od ON o.OrderID = od.OrderID
+    INNER JOIN Products p ON od.ProductID = p.ProductID
+ORDER BY 
+    o.OrderDate DESC;
+
+--Consulta Clase
+SELECT 
+    UPPER(c.CompanyName) AS [Nombre Cliente],
+    ISNULL(c.Phone, 'No disponible') AS [Telefono],
+    p.ProductName AS [Producto],
+    o.OrderDate AS [Fecha Pedido],
+    CASE
+        WHEN DATEDIFF(DAY, o.OrderDate, GETDATE()) < 30 THEN 'Reciente'
+        ELSE 'Antiguo'
+    END AS [Estado Pedido]
+FROM Customers c
+INNER JOIN Orders o ON c.CustomerID = o.CustomerID
+INNER JOIN [Order Details] od ON o.OrderID = od.OrderID
+INNER JOIN Products p ON od.ProductID = p.ProductID
+ORDER BY o.OrderDate DESC;
+
+--Crear tabla
+
+SELECT 
+    UPPER(c.CompanyName) AS [Nombre Cliente],
+    ISNULL(c.Phone, 'No disponible') AS [Telefono],
+    p.ProductName AS [Producto],
+    o.OrderDate AS [Fecha Pedido],
+    CASE
+        WHEN DATEDIFF(DAY, o.OrderDate, GETDATE()) < 30 THEN 'Reciente'
+        ELSE 'Antiguo'
+    END AS [Estado Pedido]
+INTO Tabla_Formateada
+FROM Customers c
+INNER JOIN Orders o ON c.CustomerID = o.CustomerID
+INNER JOIN [Order Details] od ON o.OrderID = od.OrderID
+INNER JOIN Products p ON od.ProductID = p.ProductID
+ORDER BY o.OrderDate DESC;
+GO;
+
+CREATE OR ALTER VIEW v_pedidosAntiguos
+AS
+SELECT [Nombre Cliente], Producto, [Estado Pedido]
+FROM Tabla_Formateada
+WHERE [Estado Pedido] = 'Antiguo'
+
+--Seleccionar el nombre completo del empleado, seleccionar el correo disponible
+--utilizando un COALESCE, comprobar si el teléfono está null, si es así, poner la
+--palabra 'disponible'. Validar el bonus si es NULL obligarlo a ser 0 y si es 0 poner
+-- la palabra 'Sin bono', y si no es 0 concatenar el bonus anteponiedo el símbolo $
+```
+
+
